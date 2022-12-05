@@ -8,7 +8,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.data.IModelData;
+import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
 
 import javax.annotation.Nonnull;
@@ -18,38 +18,54 @@ import java.util.Map;
 
 public class CTConnectedPaneBakedModel extends CTPaneBakedModel {
 
+    private static final String UP_PROP_NAME = "up";
+    private static final String DOWN_PROP_NAME = "down";
+    private static final String UP_POST_PROP_NAME = "upPost";
+    private static final String DOWN_POST_PROP_NAME = "downPost";
+    private static final ModelProperty<GenericData<Map<Direction, Boolean>>> UP_PROP = new ModelProperty<>(GenericData.predicate(UP_PROP_NAME));
+    private static final ModelProperty<GenericData<Map<Direction, Boolean>>> DOWN_PROP = new ModelProperty<>(GenericData.predicate(DOWN_PROP_NAME));
+    private static final ModelProperty<GenericData<Boolean>> UP_POST_PROP = new ModelProperty<>(GenericData.predicate(UP_POST_PROP_NAME));
+    private static final ModelProperty<GenericData<Boolean>> DOWN_POST_PROP = new ModelProperty<>(GenericData.predicate(DOWN_POST_PROP_NAME));
+
+
     public CTConnectedPaneBakedModel(IConnectedTextureBlock block){
         super(block);
     }
 
+
     @Nonnull
     @Override
-    public IModelData getModelData(@Nonnull BlockAndTintGetter world, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nonnull IModelData tileData){
-        ModelData modelData = new ModelData();
+    public ModelData getModelData(@Nonnull BlockAndTintGetter world, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nonnull ModelData tileData){
+        var modelData = ModelData.builder();
+        modelData.with(SideData.IS_CT_BAKED_MODEL, SideData.CT_BAKED_MODEL_PREDICATE_DATA);
+        var upMap = new HashMap<Direction, Boolean>();
+        var downMap = new HashMap<Direction, Boolean>();
         for(Direction direction : Direction.Plane.HORIZONTAL){
-            modelData.sides.put(direction, new SideData(direction, world, pos, state.getBlock()));
+            modelData.with(SideData.DIRECTION_MAPPING.get(direction), new SideData(direction, world, pos, state.getBlock(), true));
             BlockState upState = world.getBlockState(pos.above());
             boolean up = upState.getBlock() == state.getBlock() && upState.getValue(PipeBlock.PROPERTY_BY_DIRECTION.get(direction));
-            modelData.up.put(direction, up);
-            modelData.upPost = upState.getBlock() == state.getBlock();
+            upMap.put(direction, up);
+            modelData.with(UP_POST_PROP, new GenericData<Boolean>(UP_POST_PROP_NAME).withData(upState.getBlock() == state.getBlock()));
             BlockState downState = world.getBlockState(pos.below());
             boolean down = downState.getBlock() == state.getBlock() && downState.getValue(PipeBlock.PROPERTY_BY_DIRECTION.get(direction));
-            modelData.down.put(direction, down);
-            modelData.downPost = downState.getBlock() == state.getBlock();
+            downMap.put(direction, down);
+            modelData.with(DOWN_POST_PROP, new GenericData<Boolean>(DOWN_POST_PROP_NAME).withData(downState.getBlock() == state.getBlock()));
         }
-
-        return modelData;
+        modelData.with(UP_PROP, new GenericData<Map<Direction, Boolean>>(UP_PROP_NAME).withData(upMap));
+        modelData.with(DOWN_PROP, new GenericData<Map<Direction, Boolean>>(DOWN_PROP_NAME).withData(downMap));
+        return modelData.build();
     }
 
     @Override
-    protected boolean isEnabledUp(Direction part, IModelData extraData){
-        return extraData instanceof ModelData && (part == null ? ((ModelData)extraData).upPost : ((ModelData)extraData).up.get(part));
+    protected boolean isEnabledUp(Direction part, ModelData extraData){
+        return (part == null ? (extraData.has(UP_POST_PROP) ? extraData.get(UP_POST_PROP).getData() : false) :
+                (extraData.has(UP_PROP) ? extraData.get(UP_PROP).getData().get(part) : false));
     }
 
     @Override
-    protected boolean isEnabledDown(Direction part, IModelData extraData){
-        return extraData instanceof ModelData && (part == null ? ((ModelData)extraData).downPost : ((ModelData)extraData).down.get(part));
-    }
+    protected boolean isEnabledDown(Direction part, ModelData extraData){
+        return (part == null ? (extraData.has(UP_POST_PROP) ? extraData.get(DOWN_POST_PROP).getData() : false) :
+                (extraData.has(DOWN_PROP) ? extraData.get(DOWN_PROP).getData().get(part) : false));    }
 
     @Override
     protected float[] getBorderUV(){
@@ -57,14 +73,14 @@ public class CTConnectedPaneBakedModel extends CTPaneBakedModel {
     }
 
     @Override
-    protected float[] getUV(Direction side, IModelData modelData){
+    protected float[] getUV(Direction side, ModelData modelData){
         if(side == Direction.UP || side == Direction.DOWN)
             return this.getBorderUV();
 
-        if(!(modelData instanceof ModelData))
+        if(!modelData.has(SideData.IS_CT_BAKED_MODEL))
             return getUV(0, 0);
 
-        SideData blocks = ((ModelData)modelData).sides.get(side);
+        SideData blocks = modelData.get(SideData.DIRECTION_MAPPING.get(side));
         float[] uv;
 
         if(!blocks.left && !blocks.up && !blocks.right && !blocks.down) // all directions
@@ -189,79 +205,6 @@ public class CTConnectedPaneBakedModel extends CTPaneBakedModel {
 
     private float[] getUV(int x, int y){
         return new float[]{x * 2, y * 2, (x + 1) * 2, (y + 1) * 2};
-    }
-
-    private static class ModelData implements IModelData {
-
-        public Map<Direction,SideData> sides = new HashMap<>();
-        public Map<Direction,Boolean> up = new HashMap<>(), down = new HashMap<>();
-        public boolean upPost, downPost;
-
-        @Override
-        public boolean hasProperty(ModelProperty<?> prop){
-            return false;
-        }
-
-        @Nullable
-        @Override
-        public <T> T getData(ModelProperty<T> prop){
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public <T> T setData(ModelProperty<T> prop, T data){
-            return null;
-        }
-    }
-
-    private static class SideData {
-
-        private BlockGetter world;
-        private Block block;
-
-        public boolean left;
-        public boolean right;
-        public boolean up;
-        public boolean up_left;
-        public boolean up_right;
-        public boolean down;
-        public boolean down_left;
-        public boolean down_right;
-
-        public SideData(Direction side, BlockGetter world, BlockPos pos, Block block){
-            this.world = world;
-            this.block = block;
-
-            Direction left;
-            Direction right;
-            Direction up;
-            Direction down;
-            if(side.getAxis() == Direction.Axis.Y){
-                left = side == Direction.UP ? Direction.WEST : Direction.EAST;
-                right = side == Direction.UP ? Direction.EAST : Direction.WEST;
-                up = Direction.NORTH;
-                down = Direction.SOUTH;
-            }else{
-                left = side.getClockWise();
-                right = side.getCounterClockWise();
-                up = Direction.UP;
-                down = Direction.DOWN;
-            }
-
-            this.left = this.isSameBlock(pos.relative(left));
-            this.right = this.isSameBlock(pos.relative(right));
-            this.up = this.isSameBlock(pos.relative(up));
-            this.up_left = this.isSameBlock(pos.relative(up).relative(left));
-            this.up_right = this.isSameBlock(pos.relative(up).relative(right));
-            this.down = this.isSameBlock(pos.relative(down));
-            this.down_left = this.isSameBlock(pos.relative(down).relative(left));
-            this.down_right = this.isSameBlock(pos.relative(down).relative(right));
-        }
-
-        private boolean isSameBlock(BlockPos pos){
-            return this.world.getBlockState(pos).getBlock() == this.block;
-        }
     }
 
 }

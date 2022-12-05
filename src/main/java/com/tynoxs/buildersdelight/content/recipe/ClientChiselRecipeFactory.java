@@ -45,14 +45,12 @@ public class ClientChiselRecipeFactory {
 
         recipeFactory.clear();
 
-        for(ResourceLocation location : resourceManager.listResources("chisel", (p_10774_) -> {
-            return p_10774_.endsWith(".json");
-        })) {
+        for(var resourceLocation : resourceManager.listResources("chisel", (p_10774_) -> p_10774_.getPath().endsWith(".json")).keySet()) {
             try {
-                Resource resource = resourceManager.getResource(location);
+                Resource resource = resourceManager.getResource(resourceLocation).get();
 
                 try {
-                    InputStream inputstream = resource.getInputStream();
+                    InputStream inputstream = resource.open();
 
                     try {
                         Reader reader = new BufferedReader(new InputStreamReader(inputstream, StandardCharsets.UTF_8));
@@ -60,14 +58,14 @@ public class ClientChiselRecipeFactory {
                         try {
                             JsonElement jsonelement = GsonHelper.fromJson(this.gson, reader, JsonElement.class);
                             try {
-                                ChiselRecipe recipe = recipeFactory.fromJson(location, GsonHelper.convertToJsonObject(jsonelement, "top element"));
+                                ChiselRecipe recipe = recipeFactory.fromJson(resourceLocation, GsonHelper.convertToJsonObject(jsonelement, "top element"));
                                 if (recipe == null) {
-                                    LOGGER.info("Skipping loading recipe {} as it's serializer returned null", location);
+                                    LOGGER.info("Skipping loading recipe {} as it's serializer returned null", resourceLocation);
                                     continue;
                                 }
                                 recipeFactory.getChiselRecipes().add(recipe);
                             } catch (IllegalArgumentException | JsonParseException jsonparseexception) {
-                                LOGGER.error("Parsing error loading recipe {}", location, jsonparseexception);
+                                LOGGER.error("Parsing error loading recipe {}", resourceLocation, jsonparseexception);
                             }                        } catch (Throwable throwable3) {
                             try {
                                 reader.close();
@@ -96,7 +94,6 @@ public class ClientChiselRecipeFactory {
                 } catch (Throwable throwable5) {
                     if (resource != null) {
                         try {
-                            resource.close();
                         } catch (Throwable throwable) {
                             throwable5.addSuppressed(throwable);
                         }
@@ -104,12 +101,8 @@ public class ClientChiselRecipeFactory {
 
                     throw throwable5;
                 }
-
-                if (resource != null) {
-                    resource.close();
-                }
             } catch (IllegalArgumentException | IOException | JsonParseException jsonparseexception) {
-                LOGGER.error("Couldn't parse data file {}", location, jsonparseexception);
+                LOGGER.error("Couldn't parse data file {}", resourceLocation, jsonparseexception);
             }
         }
     }

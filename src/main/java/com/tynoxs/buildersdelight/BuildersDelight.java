@@ -1,5 +1,6 @@
 package com.tynoxs.buildersdelight;
 
+import com.tynoxs.buildersdelight.content.block.connected.model.SideData;
 import com.tynoxs.buildersdelight.content.entity.renderer.SitRenderer;
 import com.tynoxs.buildersdelight.content.init.*;
 import com.tynoxs.buildersdelight.content.recipe.ChiselRecipeFactory;
@@ -24,6 +25,7 @@ public class BuildersDelight {
 
 	public BuildersDelight() {
 		instance = this;
+		SideData.initSideData();
 		recipeFactory = new ChiselRecipeFactory();
 		IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		BdTabs.register();

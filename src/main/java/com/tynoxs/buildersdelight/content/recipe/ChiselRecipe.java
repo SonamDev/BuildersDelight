@@ -1,6 +1,5 @@
 package com.tynoxs.buildersdelight.content.recipe;
 
-import com.tynoxs.buildersdelight.BuildersDelight;
 import com.tynoxs.buildersdelight.compat.jei.IChiselRecipe;
 import com.tynoxs.buildersdelight.compat.jei.JeiIntegration;
 import net.minecraft.resources.ResourceLocation;
@@ -11,6 +10,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +83,7 @@ public class ChiselRecipe implements IChiselRecipe {
 
     @Override
     public ResourceLocation getId() {
-        return new ResourceLocation(BuildersDelight.MODID, getBaseItem().getItem().getRegistryName().getPath());
+        return ForgeRegistries.ITEMS.getKey(getBaseItem().getItem().asItem());
     }
 
     @Override

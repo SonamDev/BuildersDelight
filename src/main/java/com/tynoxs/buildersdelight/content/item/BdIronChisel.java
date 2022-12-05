@@ -1,25 +1,21 @@
 package com.tynoxs.buildersdelight.content.item;
 
-import com.tynoxs.buildersdelight.BuildersDelight;
 import com.tynoxs.buildersdelight.content.gui.menus.ContainerChisel;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.nbt.CompoundTag;
-
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.FriendlyByteBuf;
-
-import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.network.NetworkHooks;
 
@@ -47,10 +43,10 @@ public class BdIronChisel extends BdItem {
         ItemStack stack = player.getItemInHand(hand);
 
         if(!world.isClientSide){
-            NetworkHooks.openGui((ServerPlayer)player, new MenuProvider() {
+            NetworkHooks.openScreen((ServerPlayer)player, new MenuProvider() {
                 @Override
                 public Component getDisplayName(){
-                    return new TranslatableComponent("container.iron_chisel");
+                    return Component.translatable("container.iron_chisel");
                 }
 
                 @Nullable
@@ -67,7 +63,7 @@ public class BdIronChisel extends BdItem {
     public CompoundTag getShareTag(ItemStack stack) {
         CompoundTag nbt = super.getShareTag(stack);
         if (nbt != null)
-            stack.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)
+            stack.getCapability(ForgeCapabilities.ITEM_HANDLER, null)
                     .ifPresent(capability -> nbt.put("Inventory", ((ItemStackHandler) capability).serializeNBT()));
         return nbt;
     }
@@ -76,7 +72,7 @@ public class BdIronChisel extends BdItem {
     public void readShareTag(ItemStack stack, @Nullable CompoundTag nbt) {
         super.readShareTag(stack, nbt);
         if (nbt != null)
-            stack.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)
+            stack.getCapability(ForgeCapabilities.ITEM_HANDLER, null)
                     .ifPresent(capability -> ((ItemStackHandler) capability).deserializeNBT((CompoundTag) nbt.get("Inventory")));
     }
 }

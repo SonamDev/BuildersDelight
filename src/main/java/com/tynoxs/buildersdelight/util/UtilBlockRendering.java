@@ -9,6 +9,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class UtilBlockRendering {
 
+    @SuppressWarnings("removal")
     @OnlyIn(Dist.CLIENT)
     public static void register() {
         ItemBlockRenderTypes.setRenderLayer(BdDecoration.ACACIA_TABLE_2.get(), RenderType.cutout());

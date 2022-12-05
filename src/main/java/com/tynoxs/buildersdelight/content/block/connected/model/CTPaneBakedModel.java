@@ -3,22 +3,22 @@ package com.tynoxs.buildersdelight.content.block.connected.model;
 import com.mojang.math.Vector3f;
 import com.tynoxs.buildersdelight.content.block.connected.IConnectedTextureBlock;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BlockModelRotation;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraftforge.client.model.data.IDynamicBakedModel;
-import net.minecraftforge.client.model.data.IModelData;
+import net.minecraftforge.client.model.IDynamicBakedModel;
+import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public class CTPaneBakedModel implements IDynamicBakedModel {
@@ -66,9 +66,8 @@ public class CTPaneBakedModel implements IDynamicBakedModel {
         return Minecraft.getInstance().getModelManager().getModel(new ModelResourceLocation(Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(Blocks.STONE)).getPath())).getTransforms();
     }
 
-    @Nonnull
     @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @Nonnull Random rand, @Nonnull IModelData extraData){
+    public @NotNull List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData extraData, @org.jetbrains.annotations.Nullable RenderType renderType) {
         List<BakedQuad> quads = new ArrayList<>();
 
         Direction[] sides = side == null ? Direction.values() : new Direction[]{side};
@@ -88,7 +87,7 @@ public class CTPaneBakedModel implements IDynamicBakedModel {
         return Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(this.pane.getTexture());
     }
 
-    protected float[] getUV(Direction side, IModelData modelData){
+    protected float[] getUV(Direction side, ModelData modelData){
         if(side == Direction.UP || side == Direction.DOWN)
             return this.getBorderUV();
         return new float[]{0, 0, 16, 16};
@@ -185,11 +184,11 @@ public class CTPaneBakedModel implements IDynamicBakedModel {
         return new float[]{0, 0, 16, 16};
     }
 
-    protected boolean isEnabledUp(Direction part, IModelData extraData){
+    protected boolean isEnabledUp(Direction part, ModelData extraData){
         return false;
     }
 
-    protected boolean isEnabledDown(Direction part, IModelData extraData){
+    protected boolean isEnabledDown(Direction part, ModelData extraData){
         return false;
     }
 
